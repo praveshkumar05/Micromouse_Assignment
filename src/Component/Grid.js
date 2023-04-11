@@ -13,6 +13,8 @@ function Grid({ row, col, setShowGrid }) {
   const [dragging,setDragging]=useState(false);
   const [cellSize, setCellSize] = useState(0);
   const [path, setPath] = useState([]);
+  const [val,setVal]=useState([]);
+  
   let value = 0;
   let columns=col;
   let arr=[]
@@ -23,8 +25,17 @@ function Grid({ row, col, setShowGrid }) {
         arr[i][j] = value;
       }
     } 
+    let brr=[]
+    // creating two-dimensional array
+    for (let i = 0; i < rows; i++) {
+      brr[i] = [];
+      for (let j = 0; j < columns; j++) {
+        brr[i][j] = null;
+      }
+    } 
 
   const [gridValues, setGridValues] = useState(arr);
+  const [distance,setDistance]=useState(arr);
     
   const handleChange = (event, row, col) => {
     let newGridValues = [...gridValues];
@@ -39,8 +50,6 @@ function Grid({ row, col, setShowGrid }) {
     let newGridValues = [...gridValues];
     let x = gridValues[row][col] === 5 ? 0 : 5;
     newGridValues[row][col] = x;
-    
-
     setStart(true);
   };
   const handleChange3 = (event, row, col) => {
@@ -49,7 +58,6 @@ function Grid({ row, col, setShowGrid }) {
     let newGridValues = [...gridValues];
     let x = gridValues[row][col] === 2 ? 0 : 2;
     newGridValues[row][col] = x;
-    
     setDestination(true);
   };
   const bfs = () => {
@@ -97,14 +105,6 @@ function Grid({ row, col, setShowGrid }) {
       }
     }
     setPath(path.reverse());
-    let newGridValues = [...gridValues];
-    let delay = 1000; // 1 second delay
-    path.forEach(([r, c], i) => {
-      setTimeout(() => {
-        newGridValues[r][c] = 3;
-        setGridValues(newGridValues);
-      }, delay * i);
-    });
     
   };
   const handlReset=()=>{
@@ -115,10 +115,60 @@ function Grid({ row, col, setShowGrid }) {
     setDestination(false);
     setShowGrid(false);
   }
+  const dfs=(startRow, startCol, rows, cols, grid)=> {
+  // Create a 2D array to hold the distances for each cell
+  const distances = brr;
+
+  // Create a queue for the DFS
+  const queue = [];
+
+  // Add the starting cell to the queue and set its distance to 0
+  queue.push({ row: startRow, col: startCol, distance: 0 });
+  distances[startRow][startCol] = 0;
+
+  // Define a function to check if a given cell is valid and not blocked
+  function isValid(row, col) {
+    return row >= 0 && row < rows && col >= 0 && col < cols && grid[row][col] !== 1;
+  }
+
+  // Perform the DFS
+  while (queue.length > 0) {
+    // Dequeue the next cell
+    const { row, col, distance } = queue.shift();
+
+    // Check each of the cell's neighbors
+    const neighbors = [
+      { row: row - 1, col: col }, // top
+      { row: row + 1, col: col }, // bottom
+      { row: row, col: col - 1 }, // left
+      { row: row, col: col + 1 }, // right
+    ];
+
+    for (const neighbor of neighbors) {
+      const { row: neighborRow, col: neighborCol } = neighbor;
+
+      // If the neighbor is valid and hasn't been visited yet, add it to the queue
+      if (isValid(neighborRow, neighborCol) && distances[neighborRow][neighborCol] === null) {
+        const neighborDistance = distance + 1;
+        queue.push({ row: neighborRow, col: neighborCol, distance: neighborDistance });
+        distances[neighborRow][neighborCol] = neighborDistance;
+      }
+    }
+  }
+  console.log(distances);
+  setDistance(distances);
+}
+
 
   useEffect(() => {
-    if (start && destination) {
+   
+    if (start&& destination) {
       bfs();
+    }
+    else if(start)
+    {
+      dfs(sr,sc,rows,cols,gridValues);
+      console.log(distance);
     }
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -153,14 +203,11 @@ function Grid({ row, col, setShowGrid }) {
                             ? "blue"
                             : "white",
                       }}
-                      onClick={(event) =>{
-                        setDragging(!dragging);
-                        // handleChange(event, rowIndex, colIndex)
-                      }
-                         
-                      }
-                    onMouseDown={(event) => {
                      
+                         
+                    
+                    onMouseDown={(event) => {
+                        setDragging(true);
                       handleChange(event, rowIndex, colIndex);
                     }}
                    onMouseUp={() => setDragging(false)}
@@ -168,9 +215,9 @@ function Grid({ row, col, setShowGrid }) {
                       if (dragging) {
                         handleChange(event, rowIndex, colIndex);
                       }
-                   }}
-                  
-                    ></div>
+                   }}>
+
+                   </div>
                   </td>
                 ))}
               </tr>
@@ -243,7 +290,9 @@ function Grid({ row, col, setShowGrid }) {
                       onClick={(event) =>
                         handleChange3(event, rowIndex, colIndex)
                       }
-                    ></div>
+                    >
+                   
+                    </div>
                   </td>
                 ))}
               </tr>
@@ -253,7 +302,7 @@ function Grid({ row, col, setShowGrid }) {
       ) : (
         <tbody style={{ textAlign: "center" }}>
           <div>
-            <h3  >Here Is Your Shortest Path</h3>
+            <h3  > {path.size==0?"path is imaginary like yoour cursh": "Here Is Your Shortest Path"}</h3>
             <div>
               <div
                 style={{
@@ -298,7 +347,6 @@ function Grid({ row, col, setShowGrid }) {
               {
                 gridValues.map((rowValues, rowIndex) => (
                 <tr key={rowIndex}>
-                  
                   {
                       rowValues.map((cellValue, colIndex) => (
                       <td key={colIndex}>
@@ -315,7 +363,9 @@ function Grid({ row, col, setShowGrid }) {
                                 : cellValue===3
                                 ?'purple':'white'
                           }}
-                        ></div>
+                        >
+                         
+                        </div>
                       </td>
                     )) 
                   }
@@ -323,14 +373,16 @@ function Grid({ row, col, setShowGrid }) {
               ))}
             </div>
             {
-
+               
                 path.forEach((arr, index) => {
+                  
                   setTimeout(() => {
                     let newGridValues = [...gridValues];
                     newGridValues[arr[0]][arr[1]] = 3;
                     setGridValues(newGridValues);
                   },index * 40)
-                }) 
+
+                })
             }
             <div>
             </div>
