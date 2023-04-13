@@ -58,6 +58,7 @@ function InputForm() {
                 border: "none",
                 backgroundColor: "#f5f5f5",
               }}
+              required={true}
             />
           </label>
           <br />
@@ -75,6 +76,7 @@ function InputForm() {
                 border: "none",
                 backgroundColor: "#f5f5f5",
               }}
+              required={true}
             />
           </label>
           <br />
